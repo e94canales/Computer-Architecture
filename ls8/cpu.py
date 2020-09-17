@@ -7,9 +7,10 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        self.reg = [0] * 8
+        self.reg = [0] * 7 + [0xF4]
         self.ram = [0] * 256
         self.pc = 0
+        self.sp = 7
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -113,3 +114,36 @@ class CPU:
                 print(f">> Multiply: {self.reg[value_one]} x {self.reg[value_two]}")
                 self.alu("MUL", value_one, value_two)
                 self.pc += 3
+
+            # PUSH
+            if ir == 0b01000101:
+                # decrement sp
+                self.reg[self.sp] -= 1
+
+                # get reg index to push
+                reg_num = self.ram[self.pc + 1]
+
+                # get value from reg index
+                value = self.reg[reg_num]
+
+                # copy value to sp address
+                stack_top = self.reg[self.sp]
+                self.ram[stack_top] = value
+                self.pc += 2
+
+            # POP
+            if ir == 0b01000110:
+                # get reg index to pop
+                reg_num = self.ram[self.pc + 1]
+   
+                # get top of stack address
+                stack_top = self.reg[self.sp]
+
+                # get value from stack top
+                value = self.ram[stack_top]
+
+                # store value in register
+                self.reg[reg_num] = value
+
+                self.reg[self.sp] += 1
+                self.pc += 2
